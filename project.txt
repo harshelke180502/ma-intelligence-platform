@@ -1,0 +1,159 @@
+The Exit Group
+Developer Skills Assessment
+M&A Thesis Research Tool with Dashboard
+
+Overview
+The Exit Group is a boutique M&A advisory firm that sources acquisition targets for private
+equity clients. A core part of our work involves identifying companies that match a specific
+investment thesis (industry, geography, size, ownership type) and presenting those companies
+to our PE clients for evaluation.
+This project simulates that workflow. Your goal is to build a tool that takes an M&A thesis as
+input, researches and collects companies that fit the criteria, and presents those companies in a
+clean, functional dashboard with key performance indicators.
+This is not a trick question or an abstract puzzle. We want to see how you approach a real
+business problem end to end.
+
+The Thesis
+Use the following M&A thesis for your project. All candidates will work from this same thesis so
+we can evaluate results consistently.
+
+Target Thesis: Specialty Tax Advisory Services
+Our PE client has acquired a specialty tax consulting platform (focused on cost segregation
+and engineering based tax studies) and is looking to build a holistic specialty tax advisory
+firm through add on acquisitions. The thesis is to find privately held specialty tax firms
+across the Continental US that provide one or more of the following services:
+• R&D Tax Credits
+• Cost Segregation
+• Work Opportunity Tax Credits (WOTC)
+• Sales & Use Tax consulting
+Size threshold: Estimated revenue greater than $3M or employee count greater than 5.
+Geography: Continental United States.
+Ownership: Privately held. Not affiliated with a union workforce.
+Exclusions: Do not include companies whose primary service is Employee Retention
+Credit (ERC) work, and do not include firms focused exclusively on Property Tax consulting.
+
+Why This Thesis
+This is a real search mandate. The PE backed platform already has a strong cost segregation
+practice and a 200+ person sales team generating deal flow. They are acquiring firms that add
+R&D credit capabilities, Sales & Use tax expertise, and WOTC services to create a one stop
+specialty tax advisory platform. The companies you find in this project are the same types of
+companies we research every day.
+
+What to Build
+Your deliverable is a working application with two parts: a data pipeline and a dashboard.
+
+Part 1: Data Pipeline
+Build a backend process that collects company data matching the thesis above. You can pull
+from any publicly available sources (Google Maps API, state business filings, industry
+directories, professional association member lists, LinkedIn, web scraping, etc.). For each
+company, try to capture as many of the following fields as possible:
+•
+•
+•
+•
+•
+•
+•
+•
+•
+
+Company name
+Location (city, state)
+Website URL
+Primary service(s) offered (R&D Credits, Cost Seg, WOTC, Sales & Use Tax, or
+multiple)
+Estimated revenue (if available)
+Employee count (if available)
+Ownership type (private, franchise, PE backed, etc.)
+Key contact or owner name (if publicly listed)
+Data source (where you found this company)
+
+We do not expect 100% field coverage on every company. What matters is how you handle
+incomplete data, deduplication, and data quality. Specialty tax is a niche industry so the
+universe of targets is smaller than a broad services search. Finding 30 to 80 quality, relevant
+companies would be a strong result.
+
+Part 2: Dashboard
+Build a web based dashboard that presents the collected companies. The dashboard should
+include:
+•
+•
+
+•
+•
+•
+
+A sortable, filterable table of all companies found
+KPI summary cards at the top (total companies found, breakdown by service type,
+geographic distribution by state, percentage with identified ownership, average
+estimated revenue, etc.)
+At least one chart or visual (service type distribution, geographic heat map, revenue
+distribution, or similar)
+Filter by service type (R&D Credits, Cost Seg, WOTC, Sales & Use Tax)
+The ability to click into a company row and see all available detail
+
+Design does not need to be award winning. Functional, clean, and intuitive beats flashy.
+
+Technical Requirements
+•
+•
+•
+•
+•
+
+•
+•
+
+Language/Framework: Your choice. Use whatever you are strongest in. We care about
+the result, not the stack. Python/Flask, Node/React, Next.js, or anything else is fine.
+Database: Any relational or document database (PostgreSQL, SQLite, MongoDB, etc.)
+Hosting: Not required. Local run is fine. If you want to deploy it somewhere (Vercel,
+Railway, Render, etc.) that is a bonus but not expected.
+Code Repository: Deliver via a GitHub or GitLab repo. Include a README with setup
+instructions that actually work.
+AI Tooling: You are welcome to use AI coding assistants (Copilot, Claude, ChatGPT,
+Cursor, etc.). We use them too. What matters is that you can explain every line of your
+code and every architectural decision if asked.
+Submit by sharing a link to your repository (GitHub or GitLab) with a working README.
+If you run into a blocker or need to clarify scope, reach out. We would rather answer a
+question than have you waste time guessing.
+
+What Happens Next
+After submission, we will review your project and schedule a 30 to 45 minute technical
+walkthrough. During that call, we will ask you to demo the application, walk us through your
+architecture and decisions, and explain how you would extend or improve it with more time. The
+walkthrough carries as much weight as the code itself.
+
+Bonus (Not Required)
+None of the following are required. But if you have time and want to stand out:
+•
+•
+•
+•
+•
+•
+
+Allow the user to input a custom thesis (different industry, geography, size range) and
+run the pipeline dynamically
+Add an export function (CSV or Excel) so the company list can be shared with a client
+Include data enrichment from a second source (cross referencing Google Maps data
+with state filings or professional association directories, for example)
+Flag companies that appear to be PE backed already (since those are excluded from the
+thesis)
+Add basic authentication or role based access
+Deploy it live so we can interact with it directly
+
+Final Note
+We are not looking for perfection. We are looking for someone who can take a real business
+problem, think through it clearly, and build something that works. Specialty tax is a niche
+industry and these firms are not always easy to find, which is exactly why this is a good test.
+
+The dashboard you build is similar to what our PE clients would use to evaluate acquisition
+targets. If you can do this well, you can do the work.
+Good luck.
+
+Questions? Contact:
+Reece Cronin, COO
+The Exit Group LLC
+
+
