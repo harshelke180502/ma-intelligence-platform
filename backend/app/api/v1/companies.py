@@ -11,8 +11,8 @@ from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import asc, cast, desc, func, select
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import asc, cast, desc, func, select, or_ , exists, literal, text,String
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,17 +41,10 @@ _SORTABLE: dict[str, Any] = {
 }
 
 
+
+
 def _jsonb_overlap(column: Any, values: list[str]) -> Any:
-    """
-    JSONB && operator — true if the column array overlaps with values.
-
-    Used for OR-semantics service filtering:
-      services && CAST('["rd_credits","wotc"]' AS JSONB)
-    returns companies that offer rd_credits OR wotc (or both).
-
-    The GIN index on companies.services makes this O(log n).
-    """
-    return column.op("&&")(cast(json.dumps(values), JSONB))
+    return column.op("?|")(cast(values, ARRAY(String)))
 
 
 def _apply_filters(
