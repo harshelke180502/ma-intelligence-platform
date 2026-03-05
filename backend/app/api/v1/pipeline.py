@@ -1,18 +1,11 @@
 """
 Pipeline routes.
 
-POST /pipeline/run        — trigger a pipeline run (stub; logic added next increment)
-GET  /pipeline/runs       — list all pipeline runs
-GET  /pipeline/runs/{id}  — status of a specific run (for polling)
-
-The POST endpoint returns HTTP 202 Accepted immediately and creates a
-PipelineRun record.  The actual collector/normalizer/deduplicator logic
-will be wired in the next increment; for now the run is created with
-status='running' and immediately marked 'failed' with a "not yet implemented"
-error so the stub is honest about its state.
+POST /pipeline/run        — trigger a full pipeline run (blocking, ~minutes)
+GET  /pipeline/runs       — list all pipeline runs, most recent first
+GET  /pipeline/runs/{id}  — status / result of a specific run
 """
 
-from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.pipeline_run import PipelineRun
 from app.models.thesis import Thesis
+from app.pipeline.orchestrator import run_pipeline
 from app.schemas.pipeline_run import (
     PipelineRunOut,
     PipelineRunRequest,
@@ -39,17 +33,16 @@ async def trigger_pipeline_run(
     db: AsyncSession = Depends(get_db),
 ) -> PipelineStartResponse:
     """
-    Trigger a pipeline run.
+    Trigger a full pipeline run.
 
-    HTTP 202 Accepted — the pipeline executes asynchronously.
-    Poll GET /pipeline/runs/{run_id} to track progress.
+    Runs synchronously in the request — the response is returned only after
+    all collectors, normalization, and upserts complete (~minutes for a full
+    49-state run).  A production deployment would move this to a task queue
+    and return immediately with a run_id for polling.
 
-    STUB: Pipeline execution is not yet implemented.  The run record is
-    created and immediately finalized as 'failed' with a clear error message
-    so the endpoint is honest.  The orchestrator will be wired here in the
-    next implementation increment.
+    thesis_id is validated if provided; the orchestrator currently uses the
+    hardcoded default thesis parameters regardless.
     """
-    # Validate thesis if explicitly provided
     if request.thesis_id is not None:
         thesis = await db.get(Thesis, request.thesis_id)
         if thesis is None:
@@ -58,39 +51,16 @@ async def trigger_pipeline_run(
                 detail=f"Thesis {request.thesis_id} not found",
             )
 
-    # Create pipeline run record
-    run = PipelineRun(
-        thesis_id=request.thesis_id,
-        status="running",
-    )
-    db.add(run)
-    await db.flush()  # populate run.id before the commit
-
-    # ── STUB: mark immediately failed with a clear placeholder error ──────────
-    # Remove this block and replace with:
-    #   asyncio.create_task(orchestrator.run(run.id, db))
-    # once the orchestrator is implemented.
-    run.status = "failed"
-    run.completed_at = datetime.now(timezone.utc)
-    run.errors = [
-        {
-            "collector": "orchestrator",
-            "error": "Pipeline not yet implemented — stub endpoint",
-            "at": datetime.now(timezone.utc).isoformat(),
-        }
-    ]
-    # ── END STUB ─────────────────────────────────────────────────────────────
-
-    await db.commit()
-    await db.refresh(run)
+    run = await run_pipeline(db)
 
     return PipelineStartResponse(
         run_id=run.id,
         status=run.status,
         message=(
-            "Pipeline run created. "
-            "Poll GET /api/v1/pipeline/runs/{run_id} for status. "
-            "[STUB: pipeline logic not yet implemented]"
+            f"Pipeline {run.status}. "
+            f"companies_added={run.companies_added}  "
+            f"duplicates_found={run.duplicates_found}  "
+            f"errors={len(run.errors)}"
         ),
     )
 

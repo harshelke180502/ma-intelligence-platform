@@ -27,3 +27,6 @@ alembic/__pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Ignore PDFs
+*.pdf

@@ -40,7 +40,7 @@ def _svc(key: str) -> Any:
     Used inside FILTER clauses to count companies offering a specific service.
     The GIN index on companies.services makes each @> evaluation O(log n).
     """
-    return Company.services.op("@>")(cast(json.dumps([key]), JSONB))
+    return Company.services.contains([key])
 
 
 # ── GET /kpis ─────────────────────────────────────────────────────────────────

@@ -164,9 +164,9 @@ class GooglePlacesCollector(BaseCollector):
 
         result = CollectorResult()
 
-        for query_str, state_code in queries:
+        for service_key, query_str, state_code in queries:
             try:
-                written = await self._collect_query(query_str, state_code, run_id, db)
+                written = await self._collect_query(service_key, query_str, state_code, run_id, db)
                 result.records_written += written
                 if written:
                     logger.debug("  query=%r state=%s → %d records", query_str, state_code, written)
@@ -205,8 +205,8 @@ class GooglePlacesCollector(BaseCollector):
     # ── Internal helpers ──────────────────────────────────────────────────────
 
     def _build_queries(
-        self, services: list[str], states: list[str]
-    ) -> list[tuple[str, str]]:
+    self, services: list[str], states: list[str]
+) -> list[tuple[str, str, str]]:
         """
         Produce (query_string, state_code) pairs for every service × state.
 
@@ -222,11 +222,12 @@ class GooglePlacesCollector(BaseCollector):
                 continue
             for state_code in states:
                 state_name = CONTINENTAL_STATES.get(state_code, state_code)
-                pairs.append((f"{template} {state_name}", state_code))
+                pairs.append((svc,f"{template} {state_name}", state_code))
         return pairs
 
     async def _collect_query(
         self,
+        service_key: str,
         query_str: str,
         state_code: str,
         run_id: UUID,
@@ -260,6 +261,7 @@ class GooglePlacesCollector(BaseCollector):
                             "place": place,
                             "_meta": {
                                 "run_id": str(run_id),
+                                "service": service_key,
                                 "query": query_str,
                                 "state_code": state_code,
                                 "page": page_num,
