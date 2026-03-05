@@ -13,9 +13,12 @@ Conflict resolution:
   ┌─────────────────┬──────────────────────────────────────────────────────┐
   │ Field           │ Strategy                                             │
   ├─────────────────┼──────────────────────────────────────────────────────┤
-  │ city            │ COALESCE(incoming, existing) — non-null wins         │
-  │ website         │ COALESCE(incoming, existing)                         │
+  │ city            │ COALESCE(existing, incoming) — non-null wins         │
+  │ website         │ COALESCE(existing, incoming)                         │
   │ services        │ JSONB array union — deduplicated via array_agg       │
+  │ ownership_type  │ COALESCE(existing, incoming) — real data over default│
+  │ revenue_est_min │ COALESCE(existing, incoming) — real data over default│
+  │ revenue_est_max │ COALESCE(existing, incoming) — real data over default│
   │ primary_source  │ NOT updated — first-seen source wins                 │
   │ updated_at      │ Always refreshed to NOW()                            │
   └─────────────────┴──────────────────────────────────────────────────────┘
@@ -93,6 +96,9 @@ async def upsert_company(
         "website": normalized.website,
         "services": normalized.services,
         "primary_source": normalized.primary_source,
+        "ownership_type": normalized.ownership_type,
+        "revenue_est_min": normalized.revenue_est_min,
+        "revenue_est_max": normalized.revenue_est_max,
     }
 
     stmt = pg_insert(Company).values(**values)
@@ -108,6 +114,12 @@ async def upsert_company(
             "website":  func.coalesce(stmt.excluded.website, tbl.website),
             # JSONB union: accumulate service tags from all collectors
             "services": _SERVICES_UNION_SQL,
+            # Prefer existing real data over incoming default ("private").
+            # If an analyst has already set a known ownership type, keep it.
+            "ownership_type":  func.coalesce(tbl.ownership_type,  stmt.excluded.ownership_type),
+            # Prefer existing revenue estimates; fall back to thesis defaults.
+            "revenue_est_min": func.coalesce(tbl.revenue_est_min, stmt.excluded.revenue_est_min),
+            "revenue_est_max": func.coalesce(tbl.revenue_est_max, stmt.excluded.revenue_est_max),
             # Always reflect when this company record was last touched
             "updated_at": func.now(),
             # primary_source intentionally absent — first-seen source is kept

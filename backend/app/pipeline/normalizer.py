@@ -78,6 +78,9 @@ def normalize_place_record(raw_record: RawRecord) -> NormalizedCompanyInput:
         website=website,
         services=[],                        # classifier fills this next
         primary_source=raw_record.source_name,
+        ownership_type="private",           # thesis default; analyst can correct
+        revenue_est_min=3000,               # $3M in thousands USD
+        revenue_est_max=10000,              # $10M in thousands USD
     )
 
 

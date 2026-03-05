@@ -47,3 +47,9 @@ class NormalizedCompanyInput:
 
     # Carries through from raw_record.source_name for provenance
     primary_source: str = ""
+
+    # Thesis defaults applied by normalizer when source data is absent.
+    # Revenue stored in thousands USD (3000 = $3M, 10000 = $10M).
+    ownership_type: str = "private"
+    revenue_est_min: Optional[int] = 3000
+    revenue_est_max: Optional[int] = 10000
