@@ -46,6 +46,20 @@ function formatRevenue(min, max) {
   return `$${avgM.toFixed(1)}M`
 }
 
+function ThesisBadge({ score }) {
+  if (score == null) return <span className="text-gray-300">—</span>
+  const pct = Math.round(score * 100)
+  const color =
+    pct >= 70 ? 'bg-green-100 text-green-700' :
+    pct >= 40 ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${color}`}>
+      {pct}%
+    </span>
+  )
+}
+
 function SortIcon({ col, sort, order }) {
   if (sort !== col) return <span className="text-gray-300 ml-1">↕</span>
   return <span className="ml-1 text-gray-700">{order === 'asc' ? '↑' : '↓'}</span>
@@ -142,19 +156,22 @@ export default function CompaniesTable({ onSelectCompany }) {
               <th className={`${thClass} cursor-default`} onClick={() => handleSort('revenue_est_min')}>
                 Avg Revenue <SortIcon col="revenue_est_min" sort={sort} order={order} />
               </th>
+              <th className={`${thClass} cursor-default`} onClick={() => handleSort('thesis_fit_score')}>
+                Thesis Fit <SortIcon col="thesis_fit_score" sort={sort} order={order} />
+              </th>
               <th className={`${thClass} cursor-default w-24`}></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-5 py-12 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : !data?.items.length ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={8} className="px-5 py-12 text-center text-gray-400">
                   No companies found.
                 </td>
               </tr>
@@ -209,6 +226,9 @@ export default function CompaniesTable({ onSelectCompany }) {
                   </td>
                   <td className={`${tdClass} text-gray-600`}>
                     {formatRevenue(company.revenue_est_min, company.revenue_est_max)}
+                  </td>
+                  <td className={tdClass}>
+                    <ThesisBadge score={company.thesis_fit_score} />
                   </td>
                   <td className={tdClass} onClick={(e) => e.stopPropagation()}>
                     <button

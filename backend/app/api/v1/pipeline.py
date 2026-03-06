@@ -8,7 +8,7 @@ GET  /pipeline/runs/{id}  — status / result of a specific run
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +21,11 @@ from app.schemas.pipeline_run import (
     PipelineRunOut,
     PipelineRunRequest,
     PipelineStartResponse,
+)
+from app.services.finetuning_service import (
+    poll_job_status,
+    read_status,
+    run_finetuning_pipeline,
 )
 
 router = APIRouter(prefix="/pipeline", tags=["pipeline"])
@@ -146,3 +151,56 @@ async def get_pipeline_run(
         raise HTTPException(status_code=404, detail="Pipeline run not found")
 
     return PipelineRunOut.model_validate(run)
+
+
+# ── POST /pipeline/start-finetuning ──────────────────────────────────────────
+
+@router.post("/start-finetuning")
+async def start_finetuning(background_tasks: BackgroundTasks) -> dict:
+    """
+    Kick off the thesis scorer fine-tuning pipeline as a background task.
+
+    Phases (all async, response returns immediately):
+      1. Sample 100 diverse companies from the DB
+      2. Label each with GPT-4o using a detailed rubric
+      3. Upload JSONL to OpenAI Files API
+      4. Create a gpt-4o-mini fine-tuning job
+
+    Poll GET /pipeline/finetuning-status to track progress.
+    """
+    status = read_status()
+    if status.get("phase") in ("sampling", "labeling", "uploading", "training"):
+        raise HTTPException(
+            status_code=409,
+            detail="A fine-tuning job is already in progress. Poll /finetuning-status.",
+        )
+    background_tasks.add_task(run_finetuning_pipeline)
+    return {
+        "status": "started",
+        "message": (
+            "Fine-tuning pipeline started. "
+            "Poll GET /pipeline/finetuning-status for progress."
+        ),
+    }
+
+
+# ── GET /pipeline/finetuning-status ──────────────────────────────────────────
+
+@router.get("/finetuning-status")
+async def get_finetuning_status() -> dict:
+    """
+    Return the current fine-tuning status.
+
+    When phase == 'training', this also polls the OpenAI API and updates
+    the status file if the job has completed.
+
+    Response fields:
+      phase           : idle | sampling | labeling | uploading | training |
+                        succeeded | failed
+      job_id          : OpenAI fine-tuning job ID (null until submitted)
+      model_id        : Fine-tuned model ID (null until succeeded)
+      examples_labeled: How many GPT-4o labels have been generated so far
+      examples_total  : Target label count
+      message         : Human-readable status description
+    """
+    return await poll_job_status()

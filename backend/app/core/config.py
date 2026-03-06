@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Optional: pipeline runs in keyword-rules-only mode when absent
     GOOGLE_PLACES_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
 
     # ── Pipeline tuning ───────────────────────────────────────────────────────
     # Per-collector HTTP timeout in seconds

@@ -32,3 +32,6 @@ duckduckgo-search==6.3.7
 
 # LLM classification fallback
 anthropic==0.40.0
+
+# Thesis fit scoring
+openai>=1.40.0

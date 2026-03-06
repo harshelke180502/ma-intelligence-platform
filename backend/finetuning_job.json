@@ -1,0 +1,10 @@
+{
+  "phase": "succeeded",
+  "job_id": "ftjob-5uWj0fj28YY3v0sbbG5f8CCo",
+  "model_id": "ft:gpt-4o-mini-2024-07-18:uic::DGUGfcTh",
+  "examples_labeled": 100,
+  "examples_total": 100,
+  "message": "Fine-tuning complete. Model: ft:gpt-4o-mini-2024-07-18:uic::DGUGfcTh",
+  "started_at": "2026-03-06T18:22:06.964670",
+  "completed_at": "2026-03-06T19:12:09.724627"
+}

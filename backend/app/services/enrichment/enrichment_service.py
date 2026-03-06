@@ -10,6 +10,7 @@ enrich_company() drives the full per-company enrichment pipeline:
   Stage 5 — Revenue from employees   ($200k/employee ±30%, highest confidence)
   Stage 6 — Revenue from ownership   (ownership-tier ranges, fallback when no
                                        employee count is available)
+  Stage 7 — Thesis fit score         (GPT-4o-mini, 0.0–1.0 acquisition fit)
 
 Revenue confidence tiers (highest → lowest):
   1. Employee-derived  — $200k × headcount ± 30%
@@ -40,6 +41,7 @@ from app.models.company import Company
 from app.services.enrichment.employee_estimator import estimate_employees
 from app.services.enrichment.ownership_classifier import classify_ownership
 from app.services.enrichment.revenue_estimator import estimate_revenue
+from app.services.enrichment.thesis_scorer import score_thesis_fit
 from app.services.enrichment.website_finder import find_company_website
 from app.services.enrichment.website_scraper import scrape_website_text
 
@@ -152,6 +154,26 @@ async def enrich_company(company: Company, db: AsyncSession) -> None:
         logger.info(
             "revenue from ownership (%s) → $%sK–$%sK",
             company.ownership_type, rev_min, rev_max,
+        )
+
+    # ── Stage 7: Thesis fit score (GPT-4o-mini) ───────────────────────────────
+    try:
+        score = await score_thesis_fit(
+            name=company.name,
+            state=company.state,
+            services=company.services or [],
+            ownership_type=company.ownership_type,
+            revenue_est_min=company.revenue_est_min,
+            revenue_est_max=company.revenue_est_max,
+            employee_count=company.employee_count,
+            website_text=text,
+        )
+        if score is not None:
+            company.thesis_fit_score = score
+            logger.info("thesis_fit_score → %.2f", score)
+    except Exception as exc:
+        logger.warning(
+            "enrich_company: thesis_scorer failed for %s: %s", company.id, exc
         )
 
     # ── Persist ───────────────────────────────────────────────────────────────

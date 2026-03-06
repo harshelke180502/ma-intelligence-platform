@@ -21,4 +21,10 @@ export const enrichCompany = (id) =>
 export const applyOwnershipRevenue = () =>
   api.post('/pipeline/apply-ownership-revenue').then((r) => r.data)
 
+export const startFinetuning = () =>
+  api.post('/pipeline/start-finetuning').then((r) => r.data)
+
+export const getFinetuningStatus = () =>
+  api.get('/pipeline/finetuning-status').then((r) => r.data)
+
 export default api

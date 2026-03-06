@@ -5,6 +5,7 @@ import ServicePieChart from './components/ServicePieChart'
 import StateBarChart from './components/StateBarChart'
 import CompaniesTable from './components/CompaniesTable'
 import CompanyModal from './components/CompanyModal'
+import FineTuneCard from './components/FineTuneCard'
 
 export default function App() {
   const [kpis, setKpis] = useState(null)
@@ -41,7 +42,10 @@ export default function App() {
         {/* Row 1: KPI cards */}
         <KpiCards kpis={kpis} loading={kpisLoading} onRefresh={handleGlobalRefresh} />
 
-        {/* Row 2: Charts side-by-side */}
+        {/* Row 2: Fine-tune model card */}
+        <FineTuneCard />
+
+        {/* Row 3: Charts side-by-side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ServicePieChart data={kpis?.by_service} loading={kpisLoading} />
           <StateBarChart data={kpis?.by_state} loading={kpisLoading} />

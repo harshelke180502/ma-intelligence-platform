@@ -18,6 +18,27 @@ const SERVICE_COLORS = {
 // revenue_est_* stored in thousands USD → format as $XM
 const formatRevenue = (v) => (v != null ? `$${(v / 1000).toFixed(1)}M` : null)
 
+function ThesisFitBadge({ score }) {
+  const pct = Math.round(score * 100)
+  const color =
+    pct >= 70 ? 'bg-green-100 text-green-700' :
+    pct >= 40 ? 'bg-amber-100 text-amber-700' :
+                'bg-red-100 text-red-700'
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${color}`}>
+        {pct}%
+      </span>
+      <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${pct >= 70 ? 'bg-green-500' : pct >= 40 ? 'bg-amber-400' : 'bg-red-400'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 function Row({ label, value }) {
   return (
     <div className="flex py-2 border-b border-gray-100 last:border-0">
@@ -139,14 +160,14 @@ export default function CompanyModal({ companyId, onClose }) {
                     ) : null
                   }
                 />
-                <Row
-                  label="Thesis Fit Score"
-                  value={
-                    company.thesis_fit_score != null
-                      ? company.thesis_fit_score.toFixed(2)
-                      : null
-                  }
-                />
+                <div className="flex py-2 border-b border-gray-100">
+                  <span className="w-44 text-sm text-gray-500 shrink-0">Thesis Fit Score</span>
+                  {company.thesis_fit_score != null ? (
+                    <ThesisFitBadge score={company.thesis_fit_score} />
+                  ) : (
+                    <span className="text-sm text-gray-900">—</span>
+                  )}
+                </div>
                 <Row label="Data Source" value={company.primary_source} />
                 <Row label="Excluded" value={company.is_excluded ? 'Yes' : 'No'} />
               </div>
