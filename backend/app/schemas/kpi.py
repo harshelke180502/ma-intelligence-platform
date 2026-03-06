@@ -49,5 +49,6 @@ class KPIResponse(BaseModel):
     by_state: list[StateCount]          # ordered by count desc
     pct_ownership_identified: float     # 0.0–100.0, % where ownership != unknown/null
     avg_revenue_est: Optional[float]    # midpoint average in thousands USD; null if no data
+    enriched_revenue_count: int = 0    # companies with revenue improved beyond pipeline default
     companies_excluded: int             # count of is_excluded=TRUE rows
     last_pipeline_run: Optional[datetime]  # completed_at of most recent successful run

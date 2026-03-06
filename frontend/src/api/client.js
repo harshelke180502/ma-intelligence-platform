@@ -18,4 +18,7 @@ export const fetchCompany = (id) =>
 export const enrichCompany = (id) =>
   api.post(`/companies/${id}/enrich`).then((r) => r.data)
 
+export const applyOwnershipRevenue = () =>
+  api.post('/pipeline/apply-ownership-revenue').then((r) => r.data)
+
 export default api

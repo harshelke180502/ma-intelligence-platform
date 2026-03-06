@@ -86,7 +86,8 @@ async def get_kpis(db: AsyncSession = Depends(get_db)) -> KPIResponse:
         ).label("ownership_known"),
 
         # Average revenue — midpoint of (min + max) range, in thousands USD.
-        # Only computed for rows where both bounds are available.
+        # Includes all active companies that have any revenue estimate set
+        # (pipeline default $3M–$10M or enriched value).
         func.avg(
             (Company.revenue_est_min + Company.revenue_est_max) / 2.0
         ).filter(
@@ -96,6 +97,17 @@ async def get_kpis(db: AsyncSession = Depends(get_db)) -> KPIResponse:
                 Company.revenue_est_max.isnot(None),
             )
         ).label("avg_revenue"),
+
+        # Enriched revenue count — companies whose revenue has been improved
+        # beyond the pipeline default ceiling of $10M (rev_max > 10,000).
+        # Gives the frontend context for how representative the average is.
+        func.count().filter(
+            and_(
+                active,
+                Company.revenue_est_max.isnot(None),
+                Company.revenue_est_max > 10_000,
+            )
+        ).label("enriched_revenue_count"),
     )
 
     agg_row = (await db.execute(agg_stmt)).one()
@@ -138,6 +150,7 @@ async def get_kpis(db: AsyncSession = Depends(get_db)) -> KPIResponse:
         avg_revenue_est=(
             float(agg_row.avg_revenue) if agg_row.avg_revenue is not None else None
         ),
+        enriched_revenue_count=agg_row.enriched_revenue_count or 0,
         companies_excluded=agg_row.excluded or 0,
         last_pipeline_run=last_run_at,
     )

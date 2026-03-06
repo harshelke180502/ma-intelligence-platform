@@ -9,10 +9,11 @@ GET  /pipeline/runs/{id}  — status / result of a specific run
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import desc, select
+from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.models.company import Company
 from app.models.pipeline_run import PipelineRun
 from app.models.thesis import Thesis
 from app.pipeline.orchestrator import run_pipeline
@@ -63,6 +64,52 @@ async def trigger_pipeline_run(
             f"errors={len(run.errors)}"
         ),
     )
+
+
+# ── POST /pipeline/apply-ownership-revenue ───────────────────────────────────
+
+# Revenue ranges (thousands USD) per ownership type — mirrors enrichment_service.py
+_OWNERSHIP_REVENUE: dict[str, tuple[int, int]] = {
+    "pe_backed": (15_000, 150_000),
+    "public":    (50_000, 500_000),
+    "franchise": (5_000,  50_000),
+}
+_PIPELINE_DEFAULT_MAX = 10_000  # normalizer ceiling
+
+
+@router.post("/apply-ownership-revenue")
+async def apply_ownership_revenue(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Bulk-apply ownership-based revenue ranges to every company that:
+      - has a non-private ownership type (pe_backed / public / franchise), AND
+      - still holds the pipeline default revenue (rev_max ≤ $10M).
+
+    This is a fast SQL-only operation — no scraping, no external calls.
+    Returns the number of rows updated per ownership type.
+    """
+    updated: dict[str, int] = {}
+
+    for ownership, (rev_min, rev_max) in _OWNERSHIP_REVENUE.items():
+        stmt = (
+            update(Company)
+            .where(
+                and_(
+                    Company.ownership_type == ownership,
+                    Company.is_excluded.is_(False),
+                    Company.revenue_est_max.isnot(None),
+                    Company.revenue_est_max <= _PIPELINE_DEFAULT_MAX,
+                )
+            )
+            .values(revenue_est_min=rev_min, revenue_est_max=rev_max)
+        )
+        result = await db.execute(stmt)
+        updated[ownership] = result.rowcount
+
+    await db.commit()
+    total = sum(updated.values())
+    return {"updated": total, "by_ownership": updated}
 
 
 # ── GET /pipeline/runs ────────────────────────────────────────────────────────

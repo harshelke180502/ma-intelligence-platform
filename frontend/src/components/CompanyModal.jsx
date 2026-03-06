@@ -119,7 +119,9 @@ export default function CompanyModal({ companyId, onClose }) {
                   Details
                 </p>
                 <Row label="Ownership Type" value={company.ownership_type} />
-                <Row label="Employee Count" value={company.employee_count?.toLocaleString()} />
+                {company.employee_count != null && (
+                  <Row label="Employee Count" value={company.employee_count.toLocaleString()} />
+                )}
                 <Row label="Revenue (Min)" value={formatRevenue(company.revenue_est_min)} />
                 <Row label="Revenue (Max)" value={formatRevenue(company.revenue_est_max)} />
                 <Row

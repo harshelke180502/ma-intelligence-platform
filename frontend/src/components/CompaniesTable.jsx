@@ -37,11 +37,13 @@ const OWNERSHIP_COLORS = {
   franchise: 'bg-orange-100 text-orange-700',
 }
 
+// Revenue is stored in thousands USD (e.g. 6500 = $6.5M, 275000 = $275M)
 function formatRevenue(min, max) {
   if (min == null && max == null) return '—'
-  const avg = ((min ?? 0) + (max ?? min ?? 0)) / 2
-  if (avg >= 1000) return `$${(avg / 1000).toFixed(1)}B`
-  return `$${avg.toFixed(0)}M`
+  const avgK = ((min ?? 0) + (max ?? min ?? 0)) / 2  // thousands USD
+  const avgM = avgK / 1000                             // millions USD
+  if (avgM >= 1000) return `$${(avgM / 1000).toFixed(1)}B`
+  return `$${avgM.toFixed(1)}M`
 }
 
 function SortIcon({ col, sort, order }) {
@@ -134,9 +136,6 @@ export default function CompaniesTable({ onSelectCompany }) {
               </th>
               <th className={`${thClass} cursor-default`}>Services</th>
               <th className={`${thClass} cursor-default`}>Website</th>
-              <th className={`${thClass} cursor-default`} onClick={() => handleSort('employee_count')}>
-                Employees <SortIcon col="employee_count" sort={sort} order={order} />
-              </th>
               <th className={`${thClass} cursor-default`} onClick={() => handleSort('ownership_type')}>
                 Ownership <SortIcon col="ownership_type" sort={sort} order={order} />
               </th>
@@ -149,13 +148,13 @@ export default function CompaniesTable({ onSelectCompany }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-5 py-12 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : !data?.items.length ? (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-5 py-12 text-center text-gray-400">
                   No companies found.
                 </td>
               </tr>
@@ -196,11 +195,6 @@ export default function CompaniesTable({ onSelectCompany }) {
                     ) : (
                       <span className="text-gray-300">—</span>
                     )}
-                  </td>
-                  <td className={`${tdClass} text-gray-600`}>
-                    {company.employee_count != null
-                      ? company.employee_count.toLocaleString()
-                      : <span className="text-gray-300">—</span>}
                   </td>
                   <td className={tdClass}>
                     {company.ownership_type ? (
