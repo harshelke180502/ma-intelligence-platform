@@ -15,4 +15,7 @@ export const fetchCompanies = (params = {}) =>
 export const fetchCompany = (id) =>
   api.get(`/companies/${id}`).then((r) => r.data)
 
+export const enrichCompany = (id) =>
+  api.post(`/companies/${id}/enrich`).then((r) => r.data)
+
 export default api

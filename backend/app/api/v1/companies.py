@@ -24,6 +24,7 @@ from app.schemas.company import (
     CompanyUpdate,
     PaginatedCompanies,
 )
+from app.services.enrichment.enrichment_service import enrich_company
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -248,5 +249,36 @@ async def update_company(
 
     await db.commit()
     await db.refresh(company)
+
+    return CompanyOut.model_validate(company)
+
+
+# ── POST /companies/{id}/enrich ───────────────────────────────────────────────
+
+@router.post("/{company_id}/enrich", response_model=CompanyOut)
+async def enrich_company_endpoint(
+    company_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> CompanyOut:
+    """
+    Run the enrichment pipeline for a single company.
+
+    Stages: DuckDuckGo website search → scrape → regex employee extraction
+            → ownership classification → revenue estimation.
+
+    Only null fields are populated; existing analyst corrections are preserved.
+    enrich_company() commits the session — do not commit again here.
+    """
+    result = await db.execute(
+        select(Company)
+        .where(Company.id == company_id)
+        .options(selectinload(Company.contacts))
+    )
+    company = result.scalar_one_or_none()
+
+    if company is None:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    await enrich_company(company, db)
 
     return CompanyOut.model_validate(company)
