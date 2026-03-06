@@ -20,11 +20,15 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "M&A Thesis Research Platform"
     DEBUG: bool = False
 
-    # CORS — frontend dev servers (Vite default: 5173, CRA default: 3000)
-    ALLOWED_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-    ]
+    # CORS — dev servers + production frontend URL (set FRONTEND_URL in prod)
+    FRONTEND_URL: Optional[str] = None
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        origins = ["http://localhost:3000", "http://localhost:5173"]
+        if self.FRONTEND_URL:
+            origins.append(self.FRONTEND_URL)
+        return origins
 
     # ── External API keys ─────────────────────────────────────────────────────
     # Optional: pipeline runs in keyword-rules-only mode when absent
