@@ -2,6 +2,14 @@
 
 A full-stack acquisition pipeline tool for a **Specialty Tax Advisory** firm. It collects, normalises, deduplicates, and enriches company data, then scores each target against the firm's M&A thesis using a fine-tuned GPT-4o-mini model.
 
+## Live Deployment
+
+| Service | URL |
+|---|---|
+| **Frontend** | https://ma-intelligence-platform.vercel.app |
+| **Backend API** | https://ma-intelligence-platform.onrender.com/api/v1/docs |
+| **Database** | Neon PostgreSQL (managed cloud) |
+
 ---
 
 ## Table of Contents
@@ -13,8 +21,9 @@ A full-stack acquisition pipeline tool for a **Specialty Tax Advisory** firm. It
 5. [Prerequisites](#prerequisites)
 6. [Setup & Run](#setup--run)
 7. [Environment Variables](#environment-variables)
-8. [API Reference](#api-reference)
-9. [Project Structure](#project-structure)
+8. [Deployment](#deployment)
+9. [API Reference](#api-reference)
+10. [Project Structure](#project-structure)
 
 ---
 
@@ -264,8 +273,8 @@ Every Enrich call scores the company against the M&A acquisition thesis using Op
 ### 1. Clone the repository
 
 ```bash
-git clone <repo-url>
-cd "M&A"
+git clone https://github.com/harshelke180502/ma-intelligence-platform
+cd ma-intelligence-platform
 ```
 
 ### 2. Set up the database
@@ -361,6 +370,60 @@ ANTHROPIC_API_KEY=your_anthropic_key
 # ── Application ──────────────────────────────────────────────────────────────
 DEBUG=false
 ```
+
+---
+
+## Deployment
+
+The platform is deployed for free using three managed services:
+
+```
+  ┌─────────────────────────┐     HTTPS / JSON      ┌──────────────────────────────┐
+  │  Vercel (Frontend)      │ ◄───────────────────► │  Render (Backend)            │
+  │                         │                       │                              │
+  │  React + Vite           │                       │  FastAPI + Python 3.11       │
+  │  Auto-deploys on push   │                       │  Auto-deploys on push        │
+  │  to main branch         │                       │  to main branch              │
+  └─────────────────────────┘                       └──────────────┬───────────────┘
+                                                                   │
+                                                                   │ asyncpg (TLS)
+                                                                   ▼
+                                                    ┌──────────────────────────────┐
+                                                    │  Neon (PostgreSQL)           │
+                                                    │                              │
+                                                    │  Managed serverless Postgres │
+                                                    │  Connection pooling enabled  │
+                                                    │  Free tier: 512 MB storage   │
+                                                    └──────────────────────────────┘
+```
+
+### Services Used
+
+| Service | Plan | Purpose | URL |
+|---|---|---|---|
+| **Vercel** | Free | React frontend hosting + CDN | vercel.com |
+| **Render** | Free | FastAPI backend (Python 3.11) | render.com |
+| **Neon** | Free | Serverless PostgreSQL database | neon.tech |
+
+### Environment Variables (Production)
+
+Set these in the **Render** dashboard under Environment:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `postgresql+asyncpg://<user>:<pass>@<host>/neondb?sslmode=require` |
+| `OPENAI_API_KEY` | Your OpenAI API key |
+| `FRONTEND_URL` | `https://ma-intelligence-platform.vercel.app` |
+| `GOOGLE_PLACES_API_KEY` | Your Google Places key |
+| `ANTHROPIC_API_KEY` | Your Anthropic key |
+
+Set this in the **Vercel** dashboard under Environment Variables:
+
+| Variable | Value |
+|---|---|
+| `VITE_API_URL` | `https://ma-intelligence-platform.onrender.com` |
+
+> **Note:** The free Render plan spins down after 15 minutes of inactivity. The first request after idle may take ~30 seconds to wake up.
 
 ---
 
